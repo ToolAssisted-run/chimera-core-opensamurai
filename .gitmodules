@@ -1,0 +1,3 @@
+[submodule "extern/OpenSamurai"]
+	path = extern/OpenSamurai
+	url = https://github.com/ToolAssisted-run/OpenSamurai.git

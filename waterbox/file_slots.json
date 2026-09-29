@@ -1,0 +1,15 @@
+{
+  "_comment": "A Sword of the Samurai project needs no file of its own: the game is the release's original files, which the project brings as firmware (the core's firmware list, by the release and sound settings). A project may add a saved game to start from.",
+  "slots": [
+    {
+      "id": "savedgame",
+      "title": "Saved game",
+      "min": 0,
+      "max": 1,
+      "formats": [
+        "dat"
+      ],
+      "help": "A TALLTALE.DAT, the game's own saved game (Alt+S at the Home Option scroll writes it): the career choices' Restore Saved Game finds it. The game writes its saves in the machine's memory, never over this file."
+    }
+  ]
+}

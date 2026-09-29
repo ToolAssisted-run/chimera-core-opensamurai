@@ -1,0 +1,32 @@
+{
+  "package": "opensamurai",
+  "effectiveTerms": "GPL-3.0-or-later",
+  "commercialUse": "allowed under the GPL",
+  "note": "The built core combines this repository's integration (GPL-3.0-or-later, as OpenSamurai) with OpenSamurai's reconstruction of Sword of the Samurai, compiled in from its upstream source, and Munt's libmt32emu (LGPL-2.1-or-later), the Roland MT-32, compiled in from OpenSamurai's submodule. The package carries none of Sword of the Samurai's data nor any MT-32 ROM: the game's original files and the ROMs are the project's firmware, supplied by the user.",
+  "components": [
+    {
+      "name": "chimera-core-opensamurai (integration)",
+      "license": "GPL-3.0-or-later",
+      "url": "https://github.com/ToolAssisted-run/chimera-core-opensamurai",
+      "commit": "{selfCommit}",
+      "file": "LICENSE",
+      "sourceUrl": "https://github.com/ToolAssisted-run/chimera-core-opensamurai/archive/{commit}.tar.gz"
+    },
+    {
+      "name": "OpenSamurai",
+      "license": "GPL-3.0-or-later",
+      "url": "https://github.com/ToolAssisted-run/OpenSamurai",
+      "commit": "{submodule:extern/OpenSamurai}",
+      "file": "extern/OpenSamurai/LICENSE",
+      "sourceUrl": "https://github.com/ToolAssisted-run/OpenSamurai/archive/{commit}.tar.gz"
+    },
+    {
+      "name": "Munt libmt32emu (the Roland MT-32)",
+      "license": "LGPL-2.1-or-later",
+      "url": "https://github.com/munt/munt",
+      "commit": "{submodule:extern/OpenSamurai/extern/munt}",
+      "file": "extern/OpenSamurai/extern/munt/mt32emu/COPYING.LESSER.txt",
+      "sourceUrl": "https://github.com/munt/munt/archive/{commit}.tar.gz"
+    }
+  ]
+}

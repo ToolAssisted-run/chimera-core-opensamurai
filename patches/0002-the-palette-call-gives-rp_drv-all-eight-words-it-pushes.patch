@@ -1,0 +1,23 @@
+Subject: the palette call gives rp_drv all eight words it pushes
+
+rp_drv reads eight arguments and pushes all of them onto the emulated
+stack for the graphics driver. rp_lzw_palette passed two, so the other
+six were whatever the host's registers held - host pointers, among
+others - written into the game's memory each time RP loads a picture's
+palette: a native run and a sandboxed one then differ in eight bytes of
+conventional memory after a melee (linear 4B4BE), and a native run differs
+from itself under address randomisation. It now passes zeros for them.
+
+diff --git a/source/rp_core.c b/source/rp_core.c
+index 2dbacbb..342a8ee 100644
+--- a/source/rp_core.c
++++ b/source/rp_core.c
+@@ -37587,7 +37587,7 @@ static u16 f_290b_0566(u16 p0, u16 p1, u16 p2)
+ // with the original's state: DS:419A the string table, 59A0-59B2 the decoder's variables, its stack DS:59B3-5BB2,
+ // 599A/599C/599E width, height, length; the input is the catalog's stream (DS:7924 read pointer, DS:2CAE end,
+ // refilled through the far pointer at DS:7F46)
+-static void rp_lzw_palette(u16 at) { rp_drv(25, 0, at); }
++static void rp_lzw_palette(u16 at) { rp_drv(25, 0, at, 0, 0, 0, 0, 0, 0); }   // (all eight: rp_drv pushes eight)
+ static const LzwLayout rpLzw = { 0x419a, 0x59a0, 0x5bb3, 0x59a2, 0x59a4, 0x59a6, 0x59a8, 0x59aa, 0x59ac, 0x59af, 0x59b0,
+                                  0x599a, 0x7924, 0x2cae, 0x7f46, 0x40d7, true, rp_lzw_palette, asm_far_call };
+ static u16 f_2965_0008(void)

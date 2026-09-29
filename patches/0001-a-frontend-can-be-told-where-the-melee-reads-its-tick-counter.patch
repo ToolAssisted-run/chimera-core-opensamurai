@@ -1,0 +1,31 @@
+Subject: a frontend can be told where the melee reads its tick counter
+
+One weak hook, a no-op in OpenSamurai's own build: game_melee_tick_read(site)
+is called at each read of MELEE's tick counter (DS:53), before the look at
+the time it makes. MELEE counts its passes against the ticks - the start-up
+speed test at 072B wants 15,000 or more before 15 ticks, and the main loop
+at 3BC2 counts the reinforcements' countdown in passes - so under a virtual
+clock what one read costs decides the machine the melee thinks it is on.
+The hook lets such a frontend charge each read as the oracle's machine
+ran it.
+
+diff --git a/source/game.c b/source/game.c
+index f0358b8..c59ee84 100644
+--- a/source/game.c
++++ b/source/game.c
+@@ -907,10 +907,14 @@ static int run_battle(void)
+ 
+ // the tick counter (DS:53): the timer's callback (1FE7:043E) counts each frame (and DS:46C6-46C9) while its
+ // handler is hooked (DS:46AB), the counter only while DS:57 says so; the program reads it as it runs
++// a frontend whose clock is virtual may be told where the program reads the counter, before it looks at the time:
++// the start-up's speed test (072B) and the main loop (3BC2) count their passes against the ticks, so what one read
++// costs decides the machine the melee thinks it is on (none: every read is any other look at the time)
++__attribute__((weak)) void game_melee_tick_read(int site) { (void)site; }
+ static uint16_t melee_ticks(void *ctx, int site)
+ {
+   (void)ctx;
+-  (void)site;
++  game_melee_tick_read(site);
+   poll(false);
+   return *(uint16_t *)far_ptr(MELEE_DS, 0x53);
+ }
