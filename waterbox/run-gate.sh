@@ -17,8 +17,9 @@
 #     restored, abandoned nor quit), and change the sound with its command
 #   - export a property table that holds to chimera's docs/game-cores.md, and
 #     obey a poke and hold a freeze through it
-#   - refuse a missing game file, a damaged one, the floppy's AdLib driver and
-#     the other release's START.EXE, each by name
+#   - refuse a missing game file and the floppy's AdLib driver, each by
+#     name, and take a file of the project's own (a changed one, the other
+#     release's START.EXE) in the original's place
 #   - ask for its game stack as a stack (MAP_STACK)
 #   - package deterministically
 #
@@ -172,12 +173,19 @@ else
 	report "refuse:missing-file" FAIL "$(grep -m1 . "$work/r1.txt")"
 fi
 
-wd="$(workdir refuse-damaged '{}')"; printf '\x55' | dd of="$wd/DUEL.CAT" bs=1 seek=1000 conv=notrunc 2>/dev/null
-boxed "$wd" --frames 1 > "$work/r2.txt" 2>/dev/null
-if grep -q "^loadError=DUEL.CAT is not the original floppy's (Sword of the Samurai 445.03): 37557 bytes, SHA-1 " "$work/r2.txt"; then
-	report "refuse:damaged-file" PASS "one byte changed in DUEL.CAT: refused with both hashes"
+# a file of the project's own is taken in the original's place (Chimera pins
+# its hash; user-decided 2026-09-29): a START.CAT with 64 bytes changed plays,
+# and the title's pictures are its
+wd="$(workdir custom-orig '{}')"
+orig="$(boxed "$wd" --frames 400 2>/dev/null | grep -E '^(loadError|frames|videoHash)')"
+wd="$(workdir custom-file '{}')"
+python3 -c "import sys; p=sys.argv[1]; d=bytearray(open(p,'rb').read()); d[63488:63552]=bytes(b ^ 0x55 for b in d[63488:63552]); open(p,'wb').write(d)" "$wd/START.CAT"
+custom="$(boxed "$wd" --frames 400 2>/dev/null | grep -E '^(loadError|frames|videoHash)')"
+if ! echo "$custom$orig" | grep -q loadError && echo "$custom" | grep -qx 'frames=400' &&
+   [ "$(echo "$custom" | grep videoHash)" != "$(echo "$orig" | grep videoHash)" ]; then
+	report "firmware:custom" PASS "a START.CAT of the project's own (64 bytes changed) is taken, and the title's pictures are its"
 else
-	report "refuse:damaged-file" FAIL "$(grep -m1 . "$work/r2.txt")"
+	report "firmware:custom" FAIL "custom [$(echo $custom)] original [$(echo $orig)]"
 fi
 
 if [ -f "$data/floppy/ASOUND.SAM" ]; then
@@ -192,12 +200,18 @@ else
 	report "refuse:floppy-adlib" SKIP "no floppy ASOUND.SAM in $data/floppy"
 fi
 
-wd="$(workdir refuse-release '{"release":"download"}')"
-boxed "$wd" --frames 1 > "$work/r4.txt" 2>/dev/null
-if grep -qx "loadError=This START.EXE is the original floppy's, and the release setting says the download: set it to floppy." "$work/r4.txt"; then
-	report "refuse:other-release" PASS "the floppy's START.EXE under the download setting: named, with the setting to choose"
+# ...and the other release's START.EXE too, whose code OpenSamurai does not
+# run: the download's under the floppy setting plays the same title
+if [ -f "$data/START.EXE" ]; then
+	wd="$(workdir other-release '{}')"; cp "$data/START.EXE" "$wd/START.EXE"
+	other="$(boxed "$wd" --frames 400 2>/dev/null | grep -E '^(loadError|frames|videoHash)')"
+	if [ -n "$other" ] && [ "$other" = "$orig" ] && ! cmp -s "$data/START.EXE" "$data/floppy/START.EXE"; then
+		report "firmware:other-release" PASS "the download's START.EXE under the floppy setting: taken, the same 400 steps"
+	else
+		report "firmware:other-release" FAIL "[$(echo $other)] vs [$(echo $orig)]"
+	fi
 else
-	report "refuse:other-release" FAIL "$(grep -m1 . "$work/r4.txt")"
+	report "firmware:other-release" SKIP "no download START.EXE in $data"
 fi
 
 # ------------------------------------------------------------------ 5. the runs

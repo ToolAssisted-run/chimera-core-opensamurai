@@ -76,12 +76,12 @@ def main():
     for name, rel, need, size, sha1 in game_files():
         rel_text, rel_values = RELEASE[rel]
         if rom(name):
-            desc = "%s: %s. Yours to supply, when the sound is the Roland's - the package carries none of it." % (name, WHAT[name])
+            desc = "%s: %s. Yours to supply, when the sound is the Roland's - the package carries none of it. Another MT-32 ROM Munt knows may take its place (the project pins its hash)." % (name, WHAT[name])
         else:
-            desc = "%s of Sword of the Samurai 445.03 (MicroProse, 1989, DOS), %s's: %s. Yours to supply - the package carries none of the game's data." % (
+            desc = "%s of Sword of the Samurai 445.03 (MicroProse, 1989, DOS), %s's: %s. Yours to supply - the package carries none of the game's data. A file of your own (a modified one) may take its place: the project pins its hash." % (
                 name, rel_text, WHAT[name])
         if name == "START.EXE":
-            desc += " The floppy's and the download's are different builds; the release setting says which the project has."
+            desc += " The floppy's and the download's are different builds; the release setting says which the wizard looks for, and either plays the same game."
         if name == "ASOUND.SAM":
             desc += " The download's (dated 1-10-94), whichever release is played: OpenSamurai's AdLib is rebuilt from it, and the floppy's older driver is refused."
         conds = []

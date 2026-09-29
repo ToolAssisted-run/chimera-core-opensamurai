@@ -20,11 +20,11 @@ file layer and host in place of its SDL frontend.
   setting says which. The two differ only in START.EXE (whose code
   OpenSamurai does not run: the game is the same) and the AdLib driver. The
   package carries none of the game's data: the files are the project's
-  **firmware**, checked file by file against their SHA-1 at Init. A missing
-  one is named; a damaged one is refused with both hashes; the other
-  release's START.EXE is named, with the setting to choose; the floppy's
-  AdLib driver, an older build than the one OpenSamurai's AdLib is rebuilt
-  from, is refused by name.
+  **firmware**. A missing one is named. A file of your own - a modified one,
+  or the other release's START.EXE - may take an original's place: the core
+  takes it as it is, and the project pins its hash. The floppy's AdLib driver,
+  an older build than the one OpenSamurai's AdLib is rebuilt from, is refused
+  by name.
 - **A frame is one video frame** of the VGA (70.086 Hz): the game's programs
   wait for the retrace, and each reads its keys as it likes. The core's clock
   is OpenSamurai's own test clock, virtual: each look at it is 20 microseconds
@@ -100,8 +100,9 @@ over the title, a duel, a melee, a battle and the Roland's title;
 determinism, a savestate before every step, a new host mid-run, turbo; the
 pictures; each setting reaching the game; the keyboard (a key typed once,
 Shift, repeat after half a second and not before); the saved games; the
-commands; the property table, a poke and a freeze; the refusals; the
-package - each new leg seen to fail on a break of its own. The MT-32's sound
+commands; the property table, a poke and a freeze; the refusals; a file of
+the project's own in an original's place; the package - each new leg seen to
+fail on a break of its own. The MT-32's sound
 is held to the sandbox, not to the native reference: Munt builds its tables in
 floating point, and glibc's libm and musl's round differently.
 

@@ -59,7 +59,9 @@ int files_put(const char *name, const uint8_t *data, long len);   /* files.c */
  * rebuilt from: the original floppy's files. The download sold on Steam and
  * GOG.com is the same but for START.EXE (whose code the reconstruction does
  * not run) and a later AdLib driver - the one OpenSamurai's AdLib is rebuilt
- * from, and so the one the AdLib sound needs whichever release is played. */
+ * from, and so the one the AdLib sound needs whichever release is played. The
+ * hashes are the originals', which the declarations give the frontend to find
+ * them by; a file of the project's own is taken in their place (check_files). */
 enum { REL_FLOPPY = 1, REL_DOWNLOAD = 2, REL_ANY = 3 };
 enum { NEED_ALWAYS, NEED_ADLIB, NEED_SPEAKER, NEED_TANDY, NEED_ROLAND };
 
@@ -494,15 +496,13 @@ static int file_needed(int i)
 	}
 }
 
-/* whether a file is this name's in the other release (START.EXE) */
-static int other_release(int i, const char *hex)
-{
-	for (int k = 0; k < SAM_FILE_COUNT; k++)
-		if (k != i && !strcmp(k_files[k].name, k_files[i].name) && !(k_files[k].releases & g.release) && !strcmp(k_files[k].sha1, hex))
-			return 1;
-	return 0;
-}
-
+/* Every file the settings call for is there. What is in it is the project's:
+ * a file of its own (a modified one, the other release's START.EXE, another
+ * dump) is taken as it is, and Chimera pins ITS hash in the project
+ * (user-decided, 2026-09-29: a game core's firmware may be custom);
+ * OpenSamurai itself only warns about a version it was not rebuilt from. The
+ * one refusal left is a build known not to work: the original floppy's AdLib
+ * driver, older than the one OpenSamurai's AdLib is rebuilt from. */
 static int check_files(char *err, int errsize)
 {
 	int known = 0;
@@ -515,34 +515,28 @@ static int check_files(char *err, int errsize)
 			snprintf(err, (size_t)errsize, "Sword of the Samurai needs %s - add it as the project's firmware.", k_files[i].name);
 			return 0;
 		}
-		char hex[41];
-		long size = 0;
-		const int ok = sha1_file(fp, hex, &size);
-		fclose(fp);
-		if (!ok)
+		if (!strcmp(k_files[i].name, "ASOUND.SAM"))
 		{
-			snprintf(err, (size_t)errsize, "%s could not be read.", k_files[i].name);
-			return 0;
-		}
-		if (strcmp(hex, k_files[i].sha1))
-		{
-			if (!strcmp(k_files[i].name, "ASOUND.SAM") && !strcmp(hex, FLOPPY_ASOUND_SHA1))
+			char hex[41];
+			long size = 0;
+			const int ok = sha1_file(fp, hex, &size);
+			if (!ok)
+			{
+				fclose(fp);
+				snprintf(err, (size_t)errsize, "%s could not be read.", k_files[i].name);
+				return 0;
+			}
+			if (!strcmp(hex, FLOPPY_ASOUND_SHA1))
+			{
+				fclose(fp);
 				snprintf(err, (size_t)errsize,
 					"This ASOUND.SAM is the original floppy's AdLib driver, an older build than the one OpenSamurai's "
 					"AdLib is rebuilt from (the download's, %ld bytes, dated 1-10-94). Add that one, or choose "
 					"another sound.", k_files[i].size);
-			else if (other_release(i, hex))
-				snprintf(err, (size_t)errsize,
-					"This %s is the %s's, and the release setting says the %s: set it to %s.",
-					k_files[i].name, g.release == REL_FLOPPY ? "download" : "original floppy",
-					g.release == REL_FLOPPY ? "original floppy" : "download", g.release == REL_FLOPPY ? "download" : "floppy");
-			else
-				snprintf(err, (size_t)errsize,
-					"%s is not the %s's (Sword of the Samurai 445.03): %ld bytes, SHA-1 %s; that release's is %ld bytes, SHA-1 %s.",
-					k_files[i].name, g.release == REL_FLOPPY ? "original floppy" : "download",
-					size, hex, k_files[i].size, k_files[i].sha1);
-			return 0;
+				return 0;
+			}
 		}
+		fclose(fp);
 		g_known[known++] = k_files[i].name;
 	}
 	files_set_known(g_known, known);
