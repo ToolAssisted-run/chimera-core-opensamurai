@@ -8,12 +8,9 @@ title, the career choices, character creation, the role-playing game, the
 duels, the melees and the battles - stepped one video frame at a time in
 miniBox's sandbox, packaged as `opensamurai.chimeraCore`.
 
-**Built on upstream OpenSamurai, with one patch**: a weak hook where the melee
-reads its tick counter, so the core can charge each read as the machine
-OpenSamurai's melee was checked against. Everything else is
-OpenSamurai compiled from source, with Munt's libmt32emu for the Roland MT-32,
-and the core's own stack switch, file layer and host in place of its SDL
-frontend.
+**Built on upstream OpenSamurai, unpatched**: OpenSamurai compiled from source,
+with Munt's libmt32emu for the Roland MT-32, and the core's own stack switch,
+file layer and host in place of its SDL frontend.
 
 ## What it is
 
@@ -35,8 +32,8 @@ frontend.
   places cost otherwise, each measured: the melee counts its passes against
   its tick counter, and a read costs what a pass cost on the machine its
   reconstruction was checked against (10 microseconds in its start-up speed
-  test, 0.8 milliseconds in its main loop - OpenSamurai's author, from the
-  oracle's runs); and the battle's wait for its next step redraws its cursor
+  test, 0.69 milliseconds in its main loop, 21 passes a 60 Hz tick -
+  OpenSamurai's author, from the oracle's runs); and the battle's wait for its next step redraws its cursor
   on every look, so a look there costs 200 microseconds (seven times the
   speed; the battle's steps come with the frames, and memory and picture are
   equal at 20 and 200).

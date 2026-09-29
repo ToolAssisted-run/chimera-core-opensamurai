@@ -286,6 +286,18 @@ for shot in "title-title:300 (the title):f4d10c76eaf325c4" "title-crest:1499 (th
 	fi
 done
 
+# the melee thinks it is on the fast machine the oracle was: its start-up speed
+# test counted enough passes (DS:342A = 0, 1 on a slow machine) - which it does
+# only if a read of its tick counter costs what the host says it does
+# (GameHost.meleeTickRead)
+boxed "$work/melee" --frames 3601 --press 1500:N:1 $(enc 5) --dump-domain "Conventional Memory" "$work/melee-at-3600.bin" > /dev/null 2>&1
+fast="$(python3 -c "import sys; print(open(sys.argv[1], 'rb').read()[0x3886 * 16 + 0x342A])" "$work/melee-at-3600.bin" 2>/dev/null)"
+if [ "$fast" = 0 ]; then
+	report "melee:fast-machine" PASS "the speed test found the fast machine (MELEE DS:342A = 0)"
+else
+	report "melee:fast-machine" FAIL "MELEE DS:342A = ${fast:-unread} (1: the slow machine's melee)"
+fi
+
 # the MT-32 plays: its sound is stereo (the chips' is the same on both sides),
 # and the title's music is not the AdLib's
 if python3 - "$wbx" "$work/roland" "$nat/run-wbx" > "$work/mt32.txt" 2>&1 <<'EOF'

@@ -12,7 +12,7 @@
  *   every time. The melee is the exception that proves the rule: it counts
  *   its passes against its tick counter, so a read of that counter costs what
  *   one pass cost on the machine OpenSamurai's melee was checked against
- *   (patch 0001, game_melee_tick_read below);
+ *   (GameHost.meleeTickRead, host_melee_tick_read below);
  * - a finished frame ends the step: the game's stack is left where it is and
  *   the core returns to the frontend. The frame's sound comes right after its
  *   picture, so the step ends after that, or at the game's next look at its
@@ -322,21 +322,25 @@ static uint64_t host_now(void *ctx)
 	return g.vnow += cost;
 }
 
-/* Patch 0001: MELEE is about to read its tick counter, and look at the time
- * to do it. It counts passes against the ticks in two places, and what a read
- * costs there decides what machine it thinks it is on (OpenSamurai's author,
- * from the oracle's DOSBox-X runs):
+/* GameHost.meleeTickRead: MELEE is about to read its tick counter, and look
+ * at the time to do it. It counts passes against the ticks in two places, and
+ * what a read costs there decides what machine it thinks it is on (the values
+ * are OpenSamurai's own virtual clocks', its author's, from the oracle's
+ * DOSBox-X runs):
  * - the start-up speed test (072B) counts empty loops until 15 ticks and
  *   wants 15,000 or more, else it plays the slow machine's melee (coarser
- *   steps, fewer enemies); at 10 microseconds a read it counts about 21,400,
- *   the fast machine the oracle was. Not 0: the loop would never see a tick;
+ *   steps, fewer enemies; DS:342A = 1); at 10 microseconds a read it counts
+ *   about 21,400, the fast machine the oracle was (DS:342A = 0). Not 0: the
+ *   loop would never see a tick;
  * - the main loop (3BC2) reads it once a pass and the reinforcements' countdown
- *   counts passes: DOSBox-X ran about 21 passes a 60 Hz tick, 0.8 milliseconds
- *   a pass, where 20 microseconds would bring the reinforcements 30 times
- *   sooner. */
-void game_melee_tick_read(int site)
+ *   counts passes: DOSBox-X ran about 21 passes a 60 Hz tick. A pass also
+ *   makes a few ordinary looks (the keyboard's), so the read itself costs
+ *   690 microseconds, 21.1 passes a tick, where 20 would bring the
+ *   reinforcements 30 times sooner. */
+static void host_melee_tick_read(void *ctx, int site)
 {
-	g.read_cost = site == 0x072B ? 10 : site == 0x3BC2 ? 800 : 0;
+	(void)ctx;
+	g.read_cost = site == 0x072B ? 10 : site == 0x3BC2 ? 690 : 0;
 }
 
 static void host_sleep_until(void *ctx, uint64_t t)
@@ -624,6 +628,7 @@ int samdrv_init(char *err, int errsize)
 		.midi = host_midi,
 		.joystick = NULL,   /* no joystick, as the setup's answer "N" */
 		.seed = seed,       /* every program's random numbers are drawn from it */
+		.meleeTickRead = host_melee_tick_read,
 	};
 	/* the game's whole run on its own stack: the DOS programs keep their state
 	 * in their memory image, and the C stack is only the call chain */
