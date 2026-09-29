@@ -58,8 +58,10 @@ file layer and host in place of its SDL frontend.
   them. The file lives in guest memory, so a savestate carries it.
 - **Settings** recorded in the project: the release, the sound device
   (AdLib, the default; the IBM PC speaker; Tandy's; the Roland MT-32; none),
-  skipping the title (/NT), the random seed every program's random numbers
-  are drawn from, and the date and time the PC's clock starts at.
+  skipping the title (/NT), the initial random seed every program's random
+  numbers are drawn from (any 64-bit number, decimal or 0x hexadecimal, as
+  OpenSamurai's own frontend takes OPENSAMURAI_SEED: a seed it printed plays
+  the same game here), and the date and time the PC's clock starts at.
 - **The Roland MT-32** is Munt's libmt32emu, fed the MPU-401's bytes at their
   time and mixed with the game's sound in stereo. It needs RSOUND.SAM and an
   MT-32's two ROMs (v1.07, the first generation the game was made for; the

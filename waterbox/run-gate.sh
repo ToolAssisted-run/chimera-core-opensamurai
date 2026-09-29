@@ -359,6 +359,19 @@ else
 	report "settings:title-and-seed" FAIL "notitle $(pixels "$work/notitle.tga"), seed crest $(pixels "$work/seed-crest.tga")"
 fi
 
+# the seed is OpenSamurai's own: any 64-bit number, decimal or 0x hexadecimal
+# (OPENSAMURAI_SEED's strtoull) - 0x4D2 is 1234, the largest is another game,
+# and what is not a number is refused
+seedrun() { local wd; wd="$(workdir "seed-$1" "{\"random_seed\":\"$2\"}")"; boxed "$wd" --frames 1500 2>/dev/null | grep -E '^(loadError|videoHash)'; }
+s_dec="$(seedrun dec 1234)"; s_hex="$(seedrun hex 0x4D2)"; s_max="$(seedrun max 18446744073709551615)"; s_bad="$(seedrun bad 12ab)"
+s_32="$(seedrun low32 4294967295)"
+if [ "$s_dec" = "$s_hex" ] && [ -n "$s_max" ] && [ "$s_max" != "$s_dec" ] && [ "$s_max" != "$s_32" ] && [ "${s_max#videoHash=}" != "$s_max" ] &&
+   [ "$s_bad" = 'loadError=the random seed is "12ab"; it is a number from 0 to 18446744073709551615, or 0x and hexadecimal digits' ]; then
+	report "settings:seed-64-bit" PASS "1234 == 0x4D2; 18446744073709551615 another game, not 4294967295's (all 64 bits count); \"12ab\" refused"
+else
+	report "settings:seed-64-bit" FAIL "dec [$s_dec] hex [$s_hex] max [$s_max] bad [$s_bad]"
+fi
+
 # ------------------------------------------------------------------ 8. the keyboard
 # a key typed once, and held: before half a second it is still one key, after
 # it repeats (the career choices' cursor: one item, one item, four)

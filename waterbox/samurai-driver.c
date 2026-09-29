@@ -29,6 +29,7 @@
  * the machine starts at, which the game reads as the PC's clock: a movie
  * records both.
  */
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -599,7 +600,24 @@ int samdrv_init(char *err, int errsize)
 		return 0;
 	}
 
-	const uint64_t seed = (uint64_t)wbx_setting_long("random_seed", 0) & 0xFFFFFFFFu;
+	/* the seed: any 64-bit number, decimal or 0x hexadecimal, as OpenSamurai's
+	 * own frontend takes it (OPENSAMURAI_SEED, strtoull) - so a seed it printed
+	 * draws the same random numbers here */
+	uint64_t seed = 0;
+	if (wbx_setting_str("random_seed", text, sizeof text) >= 0)
+	{
+		char *end = NULL;
+		const char *p = text;
+		while (*p == ' ') p++;
+		errno = 0;
+		seed = strtoull(p, &end, 0);
+		while (end && *end == ' ') end++;
+		if (!*p || *p == '-' || errno || !end || *end)
+		{
+			snprintf(err, (size_t)errsize, "the random seed is \"%s\"; it is a number from 0 to 18446744073709551615, or 0x and hexadecimal digits", text);
+			return 0;
+		}
+	}
 
 	GameClock start;
 	if (wbx_setting_str("clock_start", text, sizeof text) < 0) strcpy(text, "1989-10-25 12:00:00");
