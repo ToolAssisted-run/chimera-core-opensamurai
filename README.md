@@ -57,7 +57,8 @@ file layer and host in place of its SDL frontend.
   own in the "savedgame" slot; the career choices' Restore Saved Game finds
   them. The file lives in guest memory, so a savestate carries it.
 - **Settings** recorded in the project: the release, the sound device
-  (AdLib, the default; the IBM PC speaker; Tandy's; the Roland MT-32; none),
+  (the Roland MT-32, the default; the AdLib; the IBM PC speaker; Tandy's;
+  none),
   skipping the title (/NT), the initial random seed every program's random
   numbers are drawn from (any 64-bit number, decimal or 0x hexadecimal, as
   OpenSamurai's own frontend takes OPENSAMURAI_SEED: a seed it printed plays
@@ -66,7 +67,8 @@ file layer and host in place of its SDL frontend.
   time and mixed with the game's sound in stereo. It needs RSOUND.SAM and an
   MT-32's two ROMs (v1.07, the first generation the game was made for; the
   DOSBox-X core's firmware ids and hashes), which the project brings as
-  firmware when the sound is the Roland's.
+  firmware when the sound is the Roland's - the default, so a new project asks
+  for them unless its sound is set to another device.
 - **Memory**: the DOS machine's 640 KB as the programs have it (every
   program's data segment at its original segment), the 1 KB block the
   launcher shares between the programs, the VGA's memory, the saved games,

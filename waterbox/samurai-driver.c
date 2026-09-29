@@ -593,7 +593,9 @@ int samdrv_init(char *err, int errsize)
 		return 0;
 	}
 
-	if (wbx_setting_str("sound", text, sizeof text) < 0) strcpy(text, "adlib");
+	/* the Roland MT-32 unless the project says otherwise (user-decided,
+	 * 2026-09-29: game cores default to the MT-32) */
+	if (wbx_setting_str("sound", text, sizeof text) < 0) strcpy(text, "roland");
 	if (!strcmp(text, "adlib")) g.sound = 'A';
 	else if (!strcmp(text, "speaker")) g.sound = 'I';
 	else if (!strcmp(text, "tandy")) g.sound = 'T';

@@ -132,14 +132,18 @@ fi
 
 # a work dir: the game files the project would mount, and a settings file
 FILES="MISC.EXE NSOUND.SAM MGRAPHIC.EXE FONTS.SAM RP.EXE DUEL.EXE BATTLE.EXE MELEE.EXE START.CAT RP.CAT DUEL.CAT MELEE.CAT EGRAPHIC.MEL ICONS.PIC ASOUND.SAM ISOUND.SAM TSOUND.SAM RSOUND.SAM"
+# The gate's runs are the AdLib's unless they name the sound: the Roland, the
+# default, is not held to the native reference - its own run says roland, and
+# settings:sound-default what a project that names no sound gets.
 workdir() {
-	local wd="$work/$1"
+	local wd="$work/$1" s="$2"
 	mkdir -p "$wd"
 	for f in $FILES; do [ -f "$data/$f" ] && cp "$data/$f" "$wd/"; done
 	# the floppy's START.EXE: the release setting's default
 	[ -f "$data/floppy/START.EXE" ] && cp "$data/floppy/START.EXE" "$wd/"
 	for f in "$data"/roland/*.ROM; do [ -f "$f" ] && cp "$f" "$wd/"; done
-	printf '%s' "$2" > "$wd/settings"
+	case "$s" in *'"sound"'*) ;; '{}') s='{"sound":"adlib"}' ;; *) s="{\"sound\":\"adlib\",${s#\{}" ;; esac
+	printf '%s' "$s" > "$wd/settings"
 	echo "$wd"
 }
 
@@ -333,6 +337,18 @@ if [ "$(v adlib)" = "$(v tandy)" ] && [ "$(v adlib)" = "$(v none)" ] && [ "$(v a
 	report "settings:sound" PASS "adlib, speaker, tandy, roland and none: five sounds; the pictures the same but the speaker's slower title"
 else
 	report "settings:sound" FAIL "video adlib $(v adlib) speaker $(v speaker) tandy $(v tandy) none $(v none)"
+fi
+# the Roland is the default: a project that names no sound plays the roland
+# run's sound, and without an MT-32 ROM is refused for it
+wd="$(workdir sound-default '{"sound":"x"}')"; printf '{}' > "$wd/settings"
+dflt="$(boxed "$wd" --frames 1600 2>/dev/null | sed -n 's/^audioHash=//p')"
+rm "$wd/MT32_PCM.ROM"
+boxed "$wd" --frames 1 > "$work/sound-default.txt" 2>/dev/null
+if [ -n "$dflt" ] && [ "$dflt" = "$(sed -n 's/^audioHash=//p' "$work/roland.box.txt")" ] && [ "$dflt" != "$(a adlib)" ] &&
+   grep -qx "loadError=Sword of the Samurai needs MT32_PCM.ROM - add it as the project's firmware." "$work/sound-default.txt"; then
+	report "settings:sound-default" PASS "no sound setting: the Roland's sound (the roland run's, 1600 steps), and the MT-32's ROMs asked for"
+else
+	report "settings:sound-default" FAIL "default $dflt, roland $(sed -n 's/^audioHash=//p' "$work/roland.box.txt"), adlib $(a adlib); $(grep -m1 . "$work/sound-default.txt")"
 fi
 
 # the release: the download's START.EXE plays the same game (a different image

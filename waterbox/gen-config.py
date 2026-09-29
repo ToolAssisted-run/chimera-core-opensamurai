@@ -148,9 +148,9 @@ def main():
                 "name": "sound",
                 "display": "Sound",
                 "type": "enum",
-                "options": ["adlib", "speaker", "tandy", "roland", "none"],
-                "default": "adlib",
-                "description": "The sound device the setup chose: the AdLib, the IBM PC speaker, Tandy's, the Roland MT-32, or none. The AdLib needs the download's ASOUND.SAM (OpenSamurai's AdLib is rebuilt from it; the floppy's is an older driver). The Roland needs RSOUND.SAM and an MT-32's two ROMs (v1.07, the first generation the game was made for), which the project brings as firmware. With the speaker the title runs slower, as it did.",
+                "options": ["roland", "adlib", "speaker", "tandy", "none"],
+                "default": "roland",
+                "description": "The sound device the setup chose: the Roland MT-32 (the default), the AdLib, the IBM PC speaker, Tandy's, or none. The AdLib needs the download's ASOUND.SAM (OpenSamurai's AdLib is rebuilt from it; the floppy's is an older driver). The Roland needs RSOUND.SAM and an MT-32's two ROMs (v1.07, the first generation the game was made for), which the project brings as firmware. With the speaker the title runs slower, as it did.",
             },
             {
                 "name": "skip_title",
