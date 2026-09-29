@@ -30,6 +30,7 @@
  * records both.
  */
 #include <errno.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -407,7 +408,11 @@ static mt32emu_report_handler_version MT32EMU_C_CALL mt32_version(mt32emu_report
 	(void)i;
 	return MT32EMU_REPORT_HANDLER_VERSION_0;
 }
-static const mt32emu_report_handler_i_v0 k_mt32_reports = { mt32_version };
+/* what Munt would print (its LCD's messages, its debug reports): to nobody -
+ * the guest's console is the frontend's */
+static void MT32EMU_C_CALL mt32_debug(void *instance, const char *fmt, va_list list) { (void)instance; (void)fmt; (void)list; }
+static void MT32EMU_C_CALL mt32_lcd(void *instance, const char *message) { (void)instance; (void)message; }
+static const mt32emu_report_handler_i_v0 k_mt32_reports = { .getVersionID = mt32_version, .printDebug = mt32_debug, .showLCDMessage = mt32_lcd };
 
 static long read_all(const char *name, uint8_t **data)
 {
