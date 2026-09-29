@@ -8,11 +8,9 @@ title, the career choices, character creation, the role-playing game, the
 duels, the melees and the battles - stepped one video frame at a time in
 miniBox's sandbox, packaged as `opensamurai.chimeraCore`.
 
-**Built on upstream OpenSamurai, with two patches**: the first adds a weak hook
-where the melee reads its tick counter, so the core can charge each read as
-the machine OpenSamurai's melee was checked against; the second makes the
-role-playing game's palette call hand its driver all eight words the driver
-pushes, where six were whatever the host's registers held. Everything else is
+**Built on upstream OpenSamurai, with one patch**: a weak hook where the melee
+reads its tick counter, so the core can charge each read as the machine
+OpenSamurai's melee was checked against. Everything else is
 OpenSamurai compiled from source, with Munt's libmt32emu for the Roland MT-32,
 and the core's own stack switch, file layer and host in place of its SDL
 frontend.
