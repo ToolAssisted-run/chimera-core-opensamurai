@@ -9,7 +9,7 @@ MB   ?= $(or $(MINIBOX_DIR),$(HOME)/chimera/extern/chimera-common-minibox)
 # ---- OpenSamurai, upstream: the library its own meson build makes (source/
 # meson.build opensamuraiSources), whole. Nothing of it uses SDL: the SDL
 # frontend is frontend/, which the core is instead.
-SAM_NAMES := asm2c battle battle_math battle_setup battle_tables battleexe_core battleexe_rt catalog dos dosmem \
+SAM_NAMES := asm2c battle battle_math battle_setup battle_tables battleexe_core battleexe_rt catalog cheats dos dosmem \
 	dsimage duel exe game duel_tables duelexe_core duelexe_rt lzw melee_core melee_rt meleeexe_core meleeexe_rt \
 	egraphic isound mgraphic pit tandy tsound asound opl rsound mpu401 misc rp_core rp_rt shared vga start_core \
 	start_rt

@@ -179,11 +179,25 @@ void samdrv_set_button(int index, int down)
 	if (index >= 0 && index < SAM_BTN_COUNT) g.want[index] = down ? 1 : 0;
 }
 
+/* the BIOS's buffer holds 15 keys (its ring of 16 words): a key typed into a
+ * full one is lost */
 static void type_key(uint16_t k)
 {
-	if (!k || (g.key_tail + 1) % 64 == g.key_head) return;   /* (the buffer full: the key is lost, as the BIOS's) */
+	if (!k || (g.key_tail - g.key_head + 64) % 64 >= 15) return;
 	g.keys[g.key_tail] = k;
 	g.key_tail = (g.key_tail + 1) % 64;
+}
+
+/* a scan code to the keyboard's interrupt: to the program's own handler when
+ * one is hooked (RP's, DUEL's, MELEE's), which also keeps a key repeated at the
+ * buffer's head once before the BIOS's handler adds the new key (RP's
+ * 168C:0E88; OpenSamurai's game_keyboard_hooked) */
+static void scan_code(uint8_t scan, int down)
+{
+	game_key(scan, false, down);
+	if (g.key_head == g.key_tail || !game_keyboard_hooked()) return;
+	const uint16_t k = g.keys[g.key_head];
+	for (int n = (g.key_head + 1) % 64; n != g.key_tail && g.keys[n] == k; n = (n + 1) % 64) g.key_head = n;
 }
 
 /* whether a held button still wants Alt down */
@@ -210,7 +224,7 @@ static int key_held_by_other(int self)
  * already down), and the key it types */
 static void key_press(int b)
 {
-	if (!key_held_by_other(b) || g.repeat_btn == b) game_key(k_keys[b].scan, false, true);
+	if (!key_held_by_other(b) || g.repeat_btn == b) scan_code(k_keys[b].scan, 1);
 	uint16_t k = k_keys[b].bios;
 	const uint8_t ascii = (uint8_t)k;
 	if (!(k_keys[b].mods & MOD_ALT) && g.shift_down && ascii >= 'a' && ascii <= 'z') k = (uint16_t)(k - ('a' - 'A'));
@@ -234,13 +248,13 @@ static void apply_buttons(void)
 			if (b == SAM_BTN_SHIFT)
 			{
 				g.shift_down = down;
-				game_key(0x2A, false, down);
+				scan_code(0x2A, down);
 				continue;
 			}
 			const int alt = k_keys[b].mods & MOD_ALT;
 			if (down)
 			{
-				if (alt && !g.alt_down) { g.alt_down = 1; game_key(0x38, false, true); }
+				if (alt && !g.alt_down) { g.alt_down = 1; scan_code(0x38, 1); }
 				key_press(b);
 				/* the keyboard repeats the last key that went down */
 				g.repeat_btn = b;
@@ -248,8 +262,8 @@ static void apply_buttons(void)
 			}
 			else
 			{
-				if (!key_held_by_other(b)) game_key(k_keys[b].scan, false, false);
-				if (g.alt_down && !alt_held()) { g.alt_down = 0; game_key(0x38, false, false); }
+				if (!key_held_by_other(b)) scan_code(k_keys[b].scan, 0);
+				if (g.alt_down && !alt_held()) { g.alt_down = 0; scan_code(0x38, 0); }
 				if (g.repeat_btn == b) g.repeat_btn = -1;
 			}
 		}

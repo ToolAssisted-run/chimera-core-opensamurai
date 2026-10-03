@@ -45,7 +45,9 @@ file layer and host in place of its SDL frontend.
   Sound (Alt+V) and Graphics (Alt+Z). A button pressed is the key typed into
   the BIOS's buffer and its make code to the programs that read the keyboard
   themselves; held, it repeats as the AT keyboard's does after a reset (half a
-  second, then 10.9 a second), on the virtual clock.
+  second, then 10.9 a second), on the virtual clock. The BIOS's buffer holds
+  15 keys, and while RP's, DUEL's or MELEE's own keyboard handler is hooked, a
+  key repeated at its head is kept once, as their handlers keep it.
 - **No campaign menu** (user-decided): a campaign can be neither saved,
   restored, abandoned nor quit, so Alt+S, Alt+R, Alt+N (which leads back to
   the career choices and their Restore) and Alt+Q are not buttons, and no

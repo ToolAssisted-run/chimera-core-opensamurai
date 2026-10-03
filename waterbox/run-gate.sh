@@ -215,25 +215,29 @@ else
 fi
 
 # ------------------------------------------------------------------ 5. the runs
+# (since OpenSamurai 887b992 the title's two dissolves take the original's 116
+# frames each, where they were instant: the title's picture is up by step 600,
+# and everything after the title comes 210 steps later than it did - its
+# 7-second hold ends on a whole second of the clock - with the same pictures)
 # the career choices' encounters: Enter at the crest question, then Down to the
 # encounter (40 frames apart: closer presses are the keyboard joystick's double
 # tap, which the menu takes as two), Enter, then Enter through the difficulty
 # and the story's pages
-enc() { local n=$1 at=2400; for i in $(seq 1 "$n"); do echo --press $at:D:1; at=$((at + 40)); done; for k in 0 200 400 600; do echo --press $((at + k)):N:1; done; }
+enc() { local n=$1 at=2610; for i in $(seq 1 "$n"); do echo --press $at:D:1; at=$((at + 40)); done; for k in 0 200 400 600; do echo --press $((at + k)):N:1; done; }
 # name, steps, settings, what the run does
 tests=(
-	"title|1600|{}|title"
-	"duel|5200|{}|duel"
-	"melee|5200|{}|melee"
-	"battle|5200|{}|battle"
-	"roland|1600|{\"sound\":\"roland\"}|title"
+	"title|1810|{}|title"
+	"duel|5410|{}|duel"
+	"melee|5410|{}|melee"
+	"battle|5410|{}|battle"
+	"roland|1810|{\"sound\":\"roland\"}|title"
 )
 test_args() {
 	case "$1" in
-		title) args=(--screenshot "300:$work/$2-title.tga" --screenshot "1499:$work/$2-crest.tga") ;;
-		duel) args=(--press 1500:N:1 $(enc 3) --screenshot "2299:$work/career.tga" --screenshot "5199:$work/duel.tga") ;;
-		melee) args=(--press 1500:N:1 $(enc 5) --screenshot "3600:$work/melee.tga") ;;
-		battle) args=(--press 1500:N:1 $(enc 7) --screenshot "5199:$work/battle.tga") ;;
+		title) args=(--screenshot "600:$work/$2-title.tga" --screenshot "1709:$work/$2-crest.tga") ;;
+		duel) args=(--press 1710:N:1 $(enc 3) --screenshot "2509:$work/career.tga" --screenshot "5409:$work/duel.tga") ;;
+		melee) args=(--press 1710:N:1 $(enc 5) --screenshot "3810:$work/melee.tga") ;;
+		battle) args=(--press 1710:N:1 $(enc 7) --screenshot "5409:$work/battle.tga") ;;
 	esac
 }
 for t in "${tests[@]}"; do
@@ -291,9 +295,9 @@ done
 # ------------------------------------------------------------------ 6. what the runs showed
 # the pictures, as the gate last saw them (look at build/gate/*.png)
 png() { python3 "$here/tests/tga2png.py" "$work/$1.tga" "$work/$1.png" 2 2>/dev/null; }
-for shot in "title-title:300 (the title):f4d10c76eaf325c4" "title-crest:1499 (the crest question):5192f8983129a02b" \
-	"career:2299 (the career choices):a546bdc3547a163a" "duel:5199 (kenjutsu training):4855d71a8e729c30" \
-	"melee:3600 (the outpost of Ishiyama Hongan-ji):fdcabebe6c9702dd" "battle:5199 (a skirmish):015c67c8fbb5d61e"; do
+for shot in "title-title:600 (the title):f4d10c76eaf325c4" "title-crest:1709 (the crest question):5192f8983129a02b" \
+	"career:2509 (the career choices):a546bdc3547a163a" "duel:5409 (kenjutsu training):4855d71a8e729c30" \
+	"melee:3810 (the outpost of Ishiyama Hongan-ji):fdcabebe6c9702dd" "battle:5409 (a skirmish):07d7dc4494cfc56b"; do
 	IFS=':' read -r file what want <<< "$shot"
 	png "$file"
 	got="$(pixels "$work/$file.tga")"
@@ -308,8 +312,8 @@ done
 # test counted enough passes (DS:342A = 0, 1 on a slow machine) - which it does
 # only if a read of its tick counter costs what the host says it does
 # (GameHost.meleeTickRead)
-boxed "$work/melee" --frames 3601 --press 1500:N:1 $(enc 5) --dump-domain "Conventional Memory" "$work/melee-at-3600.bin" > /dev/null 2>&1
-fast="$(python3 -c "import sys; print(open(sys.argv[1], 'rb').read()[0x3886 * 16 + 0x342A])" "$work/melee-at-3600.bin" 2>/dev/null)"
+boxed "$work/melee" --frames 3811 --press 1710:N:1 $(enc 5) --dump-domain "Conventional Memory" "$work/melee-at-3810.bin" > /dev/null 2>&1
+fast="$(python3 -c "import sys; print(open(sys.argv[1], 'rb').read()[0x3886 * 16 + 0x342A])" "$work/melee-at-3810.bin" 2>/dev/null)"
 if [ "$fast" = 0 ]; then
 	report "melee:fast-machine" PASS "the speed test found the fast machine (MELEE DS:342A = 0)"
 else
@@ -341,7 +345,7 @@ fi
 sounds=""
 for s in adlib speaker tandy none; do
 	wd="$(workdir "sound-$s" "{\"sound\":\"$s\"}")"
-	boxed "$wd" --frames 1600 2>/dev/null | grep -E '^(videoHash|audioHash)' > "$work/sound-$s.txt"
+	boxed "$wd" --frames 1810 2>/dev/null | grep -E '^(videoHash|audioHash)' > "$work/sound-$s.txt"
 	sounds="$sounds $s"
 done
 v() { sed -n "s/^videoHash=//p" "$work/sound-$1.txt"; }
@@ -355,12 +359,12 @@ fi
 # the Roland is the default: a project that names no sound plays the roland
 # run's sound, and without an MT-32 ROM is refused for it
 wd="$(workdir sound-default '{"sound":"x"}')"; printf '{}' > "$wd/settings"
-dflt="$(boxed "$wd" --frames 1600 2>/dev/null | sed -n 's/^audioHash=//p')"
+dflt="$(boxed "$wd" --frames 1810 2>/dev/null | sed -n 's/^audioHash=//p')"
 rm "$wd/MT32_PCM.ROM"
 boxed "$wd" --frames 1 > "$work/sound-default.txt" 2>/dev/null
 if [ -n "$dflt" ] && [ "$dflt" = "$(sed -n 's/^audioHash=//p' "$work/roland.box.txt")" ] && [ "$dflt" != "$(a adlib)" ] &&
    grep -qx "loadError=Sword of the Samurai needs MT32_PCM.ROM - add it as the project's firmware." "$work/sound-default.txt"; then
-	report "settings:sound-default" PASS "no sound setting: the Roland's sound (the roland run's, 1600 steps), and the MT-32's ROMs asked for"
+	report "settings:sound-default" PASS "no sound setting: the Roland's sound (the roland run's, 1810 steps), and the MT-32's ROMs asked for"
 else
 	report "settings:sound-default" FAIL "default $dflt, roland $(sed -n 's/^audioHash=//p' "$work/roland.box.txt"), adlib $(a adlib); $(grep -m1 . "$work/sound-default.txt")"
 fi
@@ -368,7 +372,7 @@ fi
 # the release: the download's START.EXE plays the same game (a different image
 # of its code, which OpenSamurai does not run, in memory)
 wd="$(workdir release-download '{"release":"download"}')"; cp "$data/START.EXE" "$wd/START.EXE"
-boxed "$wd" --frames 1600 2>/dev/null | grep -E '^(videoHash|audioHash)' > "$work/rel-download.txt"
+boxed "$wd" --frames 1810 2>/dev/null | grep -E '^(videoHash|audioHash)' > "$work/rel-download.txt"
 if cmp -s "$work/rel-download.txt" <(grep -E '^(videoHash|audioHash)' "$work/title.box.txt"); then
 	report "settings:release" PASS "the download's START.EXE: the same pictures and sound as the floppy's"
 else
@@ -377,14 +381,14 @@ fi
 
 # the title skipped (/NT), and the random seed: each another crest question
 wd="$(workdir notitle '{"skip_title":true}')"
-boxed "$wd" --frames 1600 --screenshot "400:$work/notitle.tga" 2>/dev/null > /dev/null
+boxed "$wd" --frames 1810 --screenshot "400:$work/notitle.tga" 2>/dev/null > /dev/null
 wd="$(workdir seed '{"random_seed":1234}')"
-boxed "$wd" --frames 1600 --screenshot "1499:$work/seed-crest.tga" 2>/dev/null > /dev/null
+boxed "$wd" --frames 1810 --screenshot "1709:$work/seed-crest.tga" 2>/dev/null > /dev/null
 png notitle; png seed-crest
 if [ "$(pixels "$work/notitle.tga")" = "$(pixels "$work/seed-crest.tga")" ] 2>/dev/null; then :; fi
 if [ "$(pixels "$work/notitle.tga")" != "$(pixels "$work/title-title.tga")" ] &&
    [ "$(pixels "$work/seed-crest.tga")" != "$(pixels "$work/title-crest.tga")" ]; then
-	report "settings:title-and-seed" PASS "no title: the crest question by step 400; seed 1234: another crest asked (build/gate/notitle.png, seed-crest.png)"
+	report "settings:title-and-seed" PASS "no title: the credits by step 400, not the title; seed 1234: another crest asked (build/gate/notitle.png, seed-crest.png)"
 else
 	report "settings:title-and-seed" FAIL "notitle $(pixels "$work/notitle.tga"), seed crest $(pixels "$work/seed-crest.tga")"
 fi
@@ -392,7 +396,7 @@ fi
 # the seed is OpenSamurai's own: any 64-bit number, decimal or 0x hexadecimal
 # (OPENSAMURAI_SEED's strtoull) - 0x4D2 is 1234, the largest is another game,
 # and what is not a number is refused
-seedrun() { local wd; wd="$(workdir "seed-$1" "{\"random_seed\":\"$2\"}")"; boxed "$wd" --frames 1500 2>/dev/null | grep -E '^(loadError|videoHash)'; }
+seedrun() { local wd; wd="$(workdir "seed-$1" "{\"random_seed\":\"$2\"}")"; boxed "$wd" --frames 1710 2>/dev/null | grep -E '^(loadError|videoHash)'; }
 s_dec="$(seedrun dec 1234)"; s_hex="$(seedrun hex 0x4D2)"; s_max="$(seedrun max 18446744073709551615)"; s_bad="$(seedrun bad 12ab)"
 s_32="$(seedrun low32 4294967295)"
 if [ "$s_dec" = "$s_hex" ] && [ -n "$s_max" ] && [ "$s_max" != "$s_dec" ] && [ "$s_max" != "$s_32" ] && [ "${s_max#videoHash=}" != "$s_max" ] &&
@@ -406,7 +410,7 @@ fi
 # a key typed once, and held: before half a second it is still one key, after
 # it repeats (the career choices' cursor: one item, one item, four)
 wd="$(workdir keys '{}')"
-for h in 1 30 90; do boxed "$wd" --frames 2700 --press 1500:N:1 --press 2400:D:$h --screenshot "2699:$work/hold$h.tga" > /dev/null 2>&1; done
+for h in 1 30 90; do boxed "$wd" --frames 2910 --press 1710:N:1 --press 2610:D:$h --screenshot "2909:$work/hold$h.tga" > /dev/null 2>&1; done
 if [ "$(pixels "$work/hold1.tga")" = "$(pixels "$work/hold30.tga")" ] && [ "$(pixels "$work/hold1.tga")" != "$(pixels "$work/hold90.tga")" ]; then
 	report "keys:repeat" PASS "Down held 30 steps is one key, 90 steps repeats (build/gate/hold90.png)"
 else
@@ -414,8 +418,8 @@ else
 fi
 png hold90
 # the samurai's name, typed at character creation with Shift for its capital
-boxed "$wd" --frames 3300 --press 1500:N:1 --press 2400:N:1 --press 2800:S:25 --press 2810:k:1 --press 2840:i:1 \
-	--press 2860:r:1 --press 2880:o:1 --press 2950:N:1 --dump-domain "Shared Block" "$work/name.bin" > /dev/null 2>&1
+boxed "$wd" --frames 3510 --press 1710:N:1 --press 2610:N:1 --press 3010:S:25 --press 3020:k:1 --press 3050:i:1 \
+	--press 3070:r:1 --press 3090:o:1 --press 3160:N:1 --dump-domain "Shared Block" "$work/name.bin" > /dev/null 2>&1
 name="$(python3 -c "import sys; print(open(sys.argv[1], 'rb').read()[0x2D4:0x2D4 + 21].split(b'\0')[0].decode())" "$work/name.bin" 2>/dev/null)"
 if [ "$name" = "Kiro" ]; then
 	report "keys:name" PASS "Shift+K, i, r, o, Enter: the samurai is \"$name\" (Samurai.Name)"
@@ -426,16 +430,16 @@ fi
 # ------------------------------------------------------------------ 9. the saved games
 # Restore Saved Game without a project's file: the blank file a new
 # installation has, the floppy's own (7,650 zeros); with one, its saves
-restore=(--frames 3400 --press 1500:N:1 --press 2400:D:1 --press 2500:N:1)
+restore=(--frames 3610 --press 1710:N:1 --press 2610:D:1 --press 2710:N:1)
 wd="$(workdir saved-none '{}')"
-boxed "$wd" "${restore[@]}" --screenshot "3399:$work/restore-blank.tga" --dump-domain "Saved Games" "$work/saved-blank.bin" > /dev/null 2>&1
+boxed "$wd" "${restore[@]}" --screenshot "3609:$work/restore-blank.tga" --dump-domain "Saved Games" "$work/saved-blank.bin" > /dev/null 2>&1
 wd="$(workdir saved-floppy '{}')"; cp "$data/floppy/TALLTALE.DAT" "$wd/FLOPPY.DAT"; printf '{"savedgame": ["FLOPPY.DAT"]}' > "$wd/slots"
-boxed "$wd" "${restore[@]}" --screenshot "3399:$work/restore-floppy.tga" > /dev/null 2>&1
+boxed "$wd" "${restore[@]}" --screenshot "3609:$work/restore-floppy.tga" > /dev/null 2>&1
 saves_ok=1
 if [ -f "$data/TALLTALE.DAT" ] && cmp -s "$data/TALLTALE.DAT" "$data/floppy/TALLTALE.DAT"; then saves_ok=0; fi
 if [ -f "$data/TALLTALE.DAT" ]; then
 	wd="$(workdir saved-own '{}')"; cp "$data/TALLTALE.DAT" "$wd/MINE.DAT"; printf '{"savedgame": ["MINE.DAT"]}' > "$wd/slots"
-	boxed "$wd" "${restore[@]}" --screenshot "3399:$work/restore-own.tga" --dump-domain "Saved Games" "$work/saved-own.bin" > /dev/null 2>&1
+	boxed "$wd" "${restore[@]}" --screenshot "3609:$work/restore-own.tga" --dump-domain "Saved Games" "$work/saved-own.bin" > /dev/null 2>&1
 	png restore-own
 else
 	saves_ok=0
@@ -453,12 +457,12 @@ fi
 # and effects, effects, silence
 if [ -f "$data/TALLTALE.DAT" ]; then
 	wd="$(workdir sound-command '{}')"; cp "$data/TALLTALE.DAT" "$wd/MINE.DAT"; printf '{"savedgame": ["MINE.DAT"]}' > "$wd/slots"
-	boxed "$wd" --frames 4400 --press 1500:N:1 --press 2400:D:1 --press 2500:N:1 --press 3400:N:1 --press 4000:V:1 --press 4200:V:1 \
+	boxed "$wd" --frames 4610 --press 1710:N:1 --press 2610:D:1 --press 2710:N:1 --press 3610:N:1 --press 4210:V:1 --press 4410:V:1 \
 		--trace "$work/sound-command.trace" --trace-props "Options.Sound Mode" > /dev/null 2>&1
-	if [ "$(at "$work/sound-command.trace" 3999 1)" = 0 ] && [ "$(at "$work/sound-command.trace" 4001 1)" = 1 ] && [ "$(at "$work/sound-command.trace" 4201 1)" = 2 ]; then
+	if [ "$(at "$work/sound-command.trace" 4209 1)" = 0 ] && [ "$(at "$work/sound-command.trace" 4211 1)" = 1 ] && [ "$(at "$work/sound-command.trace" 4411 1)" = 2 ]; then
 		report "command:sound" PASS "Alt+V in the role-playing game: music and effects, effects, silence (Options.Sound Mode 0 -> 1 -> 2)"
 	else
-		report "command:sound" FAIL "sound mode $(at "$work/sound-command.trace" 3999 1) $(at "$work/sound-command.trace" 4001 1) $(at "$work/sound-command.trace" 4201 1)"
+		report "command:sound" FAIL "sound mode $(at "$work/sound-command.trace" 4209 1) $(at "$work/sound-command.trace" 4211 1) $(at "$work/sound-command.trace" 4411 1)"
 	fi
 else
 	report "command:sound" SKIP "no saved game (TALLTALE.DAT) in $data"
