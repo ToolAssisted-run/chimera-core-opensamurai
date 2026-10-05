@@ -70,6 +70,48 @@ RELEASE = {
 SOUND = {"NEED_ADLIB": "adlib", "NEED_SPEAKER": "speaker", "NEED_TANDY": "tandy", "NEED_ROLAND": "roland"}
 
 
+# ---- what the controls and the system are called ----
+# The frontend keeps no table of these: a core says what its own are called.
+# MNEMONICS is the letter each button writes into a movie's text and heads its
+# input column with, by the button's name - whole, or without its player ("P2
+# Up" is found under "Up"), so one line serves every pad. AXIS_HEADERS is the
+# short header of each axis's column. (An entry is read by position: a letter
+# may change and no movie made before it is harmed.)
+MNEMONICS = {
+    "Up": "U", "Down": "D", "Left": "L", "Right": "R", "Up Left": "Q", "Up Right": "E",
+    "Down Left": "Z", "Down Right": "C", "Enter": "N", "Space": "_", "Backspace": "B", "Esc": "X",
+    "F1": "F", "F2": "G", "F3": "H", "Keypad +": "+", "Keypad -": "-", "Keypad *": "*",
+    "Equals": "=", "0": "0", "1": "1", "2": "2", "3": "3", "4": "4", "5": "5", "6": "6", "7": "7",
+    "8": "8", "9": "9", "A": "a", "B": "b", "C": "c", "D": "d", "E": "e", "F": "f", "G": "g",
+    "H": "h", "I": "i", "J": "j", "K": "k", "L": "l", "M": "m", "N": "n", "O": "o", "P": "p",
+    "Q": "q", "R": "r", "S": "s", "T": "t", "U": "u", "V": "v", "W": "w", "X": "x", "Y": "y",
+    "Z": "z", "Shift": "^", "Sound": "V", "Graphics": "P",
+}
+SYSTEM_NAMES = {
+    "SwordOfTheSamurai": "Sword of the Samurai",
+}
+
+
+def _bare(name):
+    """A control's name without its player: "P2 Up" -> "Up"."""
+    head, _, rest = name.partition(" ")
+    return rest if rest and head[:1] == "P" and head[1:].isdigit() else name
+
+
+def mnemonics_for(buttons):
+    """The "mnemonics" of an input declaration: a letter for every one of its
+    buttons, and for nothing else. A button nobody gave a letter stops the
+    build - the engine would give it its rule's guess, and two columns of one
+    pad would share a letter with nobody having decided it."""
+    out = {}
+    for b in buttons:
+        key = b if b in MNEMONICS else _bare(b)
+        if key not in MNEMONICS:
+            raise SystemExit("no mnemonic for the button %r (MNEMONICS in %s)" % (b, __file__))
+        out[key] = MNEMONICS[key]
+    return out
+
+
 def main():
     out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "waterbox.config")
     firmware = []
@@ -106,6 +148,7 @@ def main():
         "coreName": "OpenSamurai",
         "kind": "game",
         "systemId": "SwordOfTheSamurai",
+        "systemNames": SYSTEM_NAMES,
         "author": "Sergio Martin, from MicroProse's Sword of the Samurai (1989); chimera port by Sergio Martin",
         "url": "https://github.com/ToolAssisted-run/chimera-core-opensamurai",
         "deterministic": True,
@@ -134,6 +177,7 @@ def main():
             "name": "Sword of the Samurai",
             "_comment": "The PC's keyboard, a button for each key the game reads: the eight directions of the numeric keypad (Num Lock off), Enter and Space (the selector), Backspace (the second selector; in a duel, parry), Esc (back), F1 (the Status Scroll), F2 (the Strategic Map), F3 (the Summary Scroll), the battle's orders (keypad + and =: turn and march, keypad -: march, keypad *: turn), the digits (the battle's units), the letters (the samurai's name; R retreats from a battle) with Shift for capitals, and the game's commands: Sound (Alt+V) and Graphics (Alt+Z). Left out: a campaign can be neither saved, restored, abandoned nor quit (Alt+S, Alt+R, Alt+N - which leads back to the career choices and their Restore - and Alt+Q), and Alt+J is the joystick, which the machine does not have. A saved game to start from is the project's saved-game file, restored from the career choices. A key held repeats as a keyboard's does: after half a second, 10.9 a second.",
             "buttons": buttons(),
+            "mnemonics": mnemonics_for(buttons()),
         },
         "settings": [
             {
