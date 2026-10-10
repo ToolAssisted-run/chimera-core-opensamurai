@@ -1,5 +1,5 @@
 {
-  "_comment": "A Sword of the Samurai project needs no file of its own: the game is the release's original files, which the project brings as firmware (the core's firmware list, by the release and sound settings). A project may add a saved game to start from.",
+  "_comment": "This file lists the kinds of file a Sword of the Samurai project can hold. Chimera's New Project window is built from it. A project needs no game file of its own. The game is the original files of the chosen release, which the project supplies as firmware (the firmware list depends on the Release and Sound settings). A project can add a saved game to start from.",
   "slots": [
     {
       "id": "savedgame",
@@ -9,7 +9,7 @@
       "formats": [
         "dat"
       ],
-      "help": "A TALLTALE.DAT, the game's own saved game (Alt+S at the Home Option scroll writes it): the career choices' Restore Saved Game finds it. The game writes its saves in the machine's memory, never over this file."
+      "help": "A TALLTALE.DAT file, the game's own saved game. The game writes one when Alt+S is pressed at the Home Option scroll, and 'Restore Saved Game' in the career choices loads it. The game keeps its own saves in the machine's memory and never changes this file."
     }
   ]
 }

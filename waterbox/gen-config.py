@@ -38,31 +38,31 @@ def buttons():
 
 
 WHAT = {
-    "MISC.EXE": "the keyboard and joystick helpers every program calls",
-    "NSOUND.SAM": "the silent sound driver, which the programs load whatever the setup chose",
+    "MISC.EXE": "the keyboard and joystick routines that every program of the game uses",
+    "NSOUND.SAM": "the silent sound driver, which the programs load whichever sound device is chosen",
     "MGRAPHIC.EXE": "the VGA graphics driver",
     "FONTS.SAM": "the fonts",
     "START.EXE": "the title, the career choices and character creation",
-    "RP.EXE": "the role-playing game",
+    "RP.EXE": "the role-playing part of the game",
     "DUEL.EXE": "the duels",
     "BATTLE.EXE": "the battles",
     "MELEE.EXE": "the melees",
-    "START.CAT": "the title's pictures, the windows' and the political map's data",
-    "RP.CAT": "the role-playing game's pictures and the provinces' travel maps",
-    "DUEL.CAT": "the duels' backgrounds and fighters",
-    "MELEE.CAT": "the melees' pictures",
-    "EGRAPHIC.MEL": "the melee's own drawing code (it draws in the EGA's mode)",
-    "ICONS.PIC": "the battle's icons",
+    "START.CAT": "the title pictures and the data of the windows and the political map",
+    "RP.CAT": "the pictures of the role-playing part and the travel maps of the provinces",
+    "DUEL.CAT": "the backgrounds and fighters of the duels",
+    "MELEE.CAT": "the pictures of the melees",
+    "EGRAPHIC.MEL": "the drawing code of the melees, which use the EGA graphics mode",
+    "ICONS.PIC": "the icons of the battles",
     "ASOUND.SAM": "the AdLib sound driver",
-    "ISOUND.SAM": "the PC speaker's sound driver",
-    "TSOUND.SAM": "Tandy's sound driver",
-    "RSOUND.SAM": "the Roland MT-32's sound driver",
-    "MT32_CONTROL.ROM": "no file of the game's: the Roland MT-32's control ROM, v1.07, dumped from a unit of the first generation - the sound the game was made for",
-    "MT32_PCM.ROM": "no file of the game's: the Roland MT-32's PCM ROM, the one every MT-32 has",
+    "ISOUND.SAM": "the PC speaker sound driver",
+    "TSOUND.SAM": "the Tandy sound driver",
+    "RSOUND.SAM": "the Roland MT-32 sound driver",
+    "MT32_CONTROL.ROM": "the control ROM of the Roland MT-32, version 1.07, dumped from a unit of the first generation, which is the sound the game was made for",
+    "MT32_PCM.ROM": "the PCM ROM of the Roland MT-32, which is the same in every MT-32",
 }
 
 RELEASE = {
-    "REL_FLOPPY": ("the original floppy", ["floppy"]),
+    "REL_FLOPPY": ("the original floppy release", ["floppy"]),
     "REL_DOWNLOAD": ("the download sold on Steam and GOG.com", ["download"]),
     "REL_ANY": ("either release", ["floppy", "download"]),
 }
@@ -118,14 +118,18 @@ def main():
     for name, rel, need, size, sha1 in game_files():
         rel_text, rel_values = RELEASE[rel]
         if rom(name):
-            desc = "%s: %s. Yours to supply, when the sound is the Roland's - the package carries none of it. Another MT-32 ROM Munt knows may take its place (the project pins its hash)." % (name, WHAT[name])
+            desc = ("%s is not one of the game's files. It is %s. You have to supply it when the sound device is the"
+                    " Roland, because this package includes none of it. Another MT-32 ROM that Munt knows can be used"
+                    " in its place, and the project then records its hash.") % (name, WHAT[name])
         else:
-            desc = "%s of Sword of the Samurai 445.03 (MicroProse, 1989, DOS), %s's: %s. Yours to supply - the package carries none of the game's data. A file of your own (a modified one) may take its place: the project pins its hash." % (
+            desc = ("%s, a file of Sword of the Samurai 445.03 (MicroProse, 1989, DOS), from %s. It holds %s. You"
+                    " have to supply it, because this package includes none of the game's files. A modified file of"
+                    " your own can be used in its place, and the project then records its hash.") % (
                 name, rel_text, WHAT[name])
         if name == "START.EXE":
-            desc += " The floppy's and the download's are different builds; the release setting says which the wizard looks for, and either plays the same game."
+            desc += " The floppy and the download have different builds of this file. The Release setting says which one the wizard looks for, and both play the same game."
         if name == "ASOUND.SAM":
-            desc += " The download's (dated 1-10-94), whichever release is played: OpenSamurai's AdLib is rebuilt from it, and the floppy's older driver is refused."
+            desc += " It must be the download's file (dated 1-10-94), whichever release is played. OpenSamurai's AdLib sound is built from it, and the floppy's older driver is refused."
         conds = []
         if rel != "REL_ANY":
             conds.append({"setting": "release", "in": rel_values})
@@ -186,7 +190,12 @@ def main():
                 "type": "enum",
                 "options": ["floppy", "download"],
                 "default": "floppy",
-                "description": "The release of Sword of the Samurai 445.03 the project's files are: the original floppy's (the one the published speedrun plays), or the download sold on Steam and GOG.com. They are the same game; only START.EXE (whose code OpenSamurai does not run) and the AdLib driver differ.",
+                "description": "Which release of Sword of the Samurai 445.03 the "
+                    "project's files come from: the original floppy (the one"
+                    " the published speedrun uses) or the download sold on "
+                    "Steam and GOG.com. Both are the same game. Only "
+                    "START.EXE (whose code OpenSamurai does not run) and the"
+                    " AdLib driver differ.",
             },
             {
                 "name": "sound",
@@ -194,28 +203,53 @@ def main():
                 "type": "enum",
                 "options": ["roland", "adlib", "speaker", "tandy", "none"],
                 "default": "roland",
-                "description": "The sound device the setup chose: the Roland MT-32 (the default), the AdLib, the IBM PC speaker, Tandy's, or none. The AdLib needs the download's ASOUND.SAM (OpenSamurai's AdLib is rebuilt from it; the floppy's is an older driver). The Roland needs RSOUND.SAM and an MT-32's two ROMs (v1.07, the first generation the game was made for), which the project brings as firmware. With the speaker the title runs slower, as it did.",
+                "description": "The sound device the game is set up for: the Roland "
+                    "MT-32 (the default), the AdLib, the IBM PC speaker, the"
+                    " Tandy, or none. The AdLib needs the download's "
+                    "ASOUND.SAM, because OpenSamurai's AdLib sound is built "
+                    "from it and the floppy has an older driver. The Roland "
+                    "needs RSOUND.SAM and the two ROMs of an MT-32 (version "
+                    "1.07, the first generation, which the game was made "
+                    "for). The project supplies them as firmware. With the "
+                    "PC speaker the title sequence runs slower, as it did "
+                    "originally.",
             },
             {
                 "name": "skip_title",
                 "display": "Skip the Title",
                 "type": "bool",
                 "default": False,
-                "description": "Start with /NT, as the original allowed: the title sequence is left out and the game starts at the copy protection's question.",
+                "description": "Starts the game with its /NT option. The title sequence"
+                    " is left out and the game starts at the copy-protection"
+                    " question.",
             },
             {
                 "name": "random_seed",
                 "display": "Random Seed",
                 "type": "string",
                 "default": "0",
-                "description": "The initial seed every program's random numbers are drawn from: the crest question, the characters, the encounters, the duels', melees' and battles' foes. The DOS programs took theirs from the clock; OpenSamurai draws each from this one seed. Any 64-bit number, decimal or 0x hexadecimal, as OpenSamurai's own frontend takes it (OPENSAMURAI_SEED): a seed it printed draws the same numbers here. A movie records the seed it ran with.",
+                "description": "The starting number for all of the game's random "
+                    "numbers: the crest question, the characters, the "
+                    "encounters, and the opponents in duels, melees and "
+                    "battles. The DOS programs took their random numbers "
+                    "from the clock. OpenSamurai takes all of them from this"
+                    " one number. It can be any 64-bit number, in decimal or"
+                    " in hexadecimal after 0x, in the same form "
+                    "OpenSamurai's own program takes it (OPENSAMURAI_SEED). "
+                    "A number that program printed gives the same random "
+                    "numbers here. A movie records the number it ran with.",
             },
             {
                 "name": "clock_start",
                 "display": "Start Date and Time",
                 "type": "string",
                 "default": "1989-10-25 12:00:00",
-                "description": "The PC's clock when the game starts, YYYY-MM-DD HH:MM:SS; it runs on with the frames, and the game reads it as the time (how long a prompt waits, when a travelling encounter may come). A movie records the start it ran with.",
+                "description": "The PC's date and time when the game starts, written as"
+                    " YYYY-MM-DD HH:MM:SS. The clock then advances with the "
+                    "frames. The game reads it as the time, for example for "
+                    "how long a prompt waits and when an encounter on the "
+                    "road can happen. A movie records the start time it ran "
+                    "with.",
             },
         ],
         "firmware": firmware,
