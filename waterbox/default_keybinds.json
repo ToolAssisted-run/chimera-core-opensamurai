@@ -8,10 +8,10 @@
   ],
   "AllTrollers": {
     "Sword of the Samurai": {
-      "Up": "Up, Keypad8, J1 POV1U, X1 DpadUp, X1 LStickUp",
-      "Down": "Down, Keypad2, J1 POV1D, X1 DpadDown, X1 LStickDown",
-      "Left": "Left, Keypad4, J1 POV1L, X1 DpadLeft, X1 LStickLeft",
-      "Right": "Right, Keypad6, J1 POV1R, X1 DpadRight, X1 LStickRight",
+      "Up": "Up, Keypad8, J1 POV0U, X1 DpadUp, X1 LStickUp",
+      "Down": "Down, Keypad2, J1 POV0D, X1 DpadDown, X1 LStickDown",
+      "Left": "Left, Keypad4, J1 POV0L, X1 DpadLeft, X1 LStickLeft",
+      "Right": "Right, Keypad6, J1 POV0R, X1 DpadRight, X1 LStickRight",
       "Up Left": "Home, Keypad7",
       "Up Right": "PageUp, Keypad9",
       "Down Left": "End, Keypad1",
