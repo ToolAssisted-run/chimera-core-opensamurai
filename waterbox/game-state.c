@@ -136,21 +136,21 @@ static void table_init(void)
 	if (g_len) return;
 	add("{ \"properties\": [");
 
-	prop("Frame", "Game State", 0, "u32", "Game", "\"writable\": false, \"description\": \"Video frames shown, 70.086 a second\"");
-	prop("Ended", "Game State", 4, "bool", "Game", "\"writable\": false, \"description\": \"The player quit the game\"");
+	prop("Frame", "Game State", 0, "u32", "Game", "\"writable\": false, \"description\": \"property.frame\"");
+	prop("Ended", "Game State", 4, "bool", "Game", "\"writable\": false, \"description\": \"property.ended\"");
 
 	/* the shared block: what the launcher and the programs hand each other
 	 * (OpenSamurai's source/shared.h and docs/FINDINGS.md) */
-	prop("Samurai.Name", "Shared Block", 0x2D4, "string", "Samurai", "\"length\": 21, \"description\": \"The player's name, as character creation took it\"");
+	prop("Samurai.Name", "Shared Block", 0x2D4, "string", "Samurai", "\"length\": 21, \"description\": \"property.samurai_name\"");
 	prop("Options.Video Mode", "Shared Block", 0x22, "u16", "Options",
 		"\"writable\": false, \"values\": { \"0\": \"CGA\", \"1\": \"Tandy\", \"2\": \"EGA\", \"3\": \"MCGA\", \"4\": \"VGA\", \"5\": \"Hercules\" }");
 	prop("Options.Sound Mode", "Shared Block", 0x310, "u16", "Options",
-		"\"values\": { \"0\": \"Music and effects\", \"1\": \"Effects\", \"2\": \"Silent\" }, \"description\": \"Alt+V cycles it\"");
+		"\"values\": { \"0\": \"Music and effects\", \"1\": \"Effects\", \"2\": \"Silent\" }, \"description\": \"property.options_sound_mode\"");
 	prop("Duel.Background", "Shared Block", 0x5C, "u16", "Duel", "\"values\": { \"0\": \"Village\", \"1\": \"Outside\", \"2\": \"Inside\" }");
 	prop("Duel.Player Won", "Shared Block", 0x4C, "u16", "Duel", "");
 	prop("Duel.Player Fell", "Shared Block", 0x4E, "u16", "Duel", "");
 	prop("Duel.Retreated", "Shared Block", 0x62, "u16", "Duel", "");
-	prop("Samurai.Wounded", "Shared Block", 0x54, "u16", "Samurai", "\"description\": \"The player carries a wound (a melee into a duel, and back to the role-playing game)\"");
+	prop("Samurai.Wounded", "Shared Block", 0x54, "u16", "Samurai", "\"description\": \"property.samurai_wounded\"");
 
 	add("\n  ]\n}\n");
 }

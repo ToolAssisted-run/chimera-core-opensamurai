@@ -51,6 +51,11 @@
 #define MT32EMU_API_TYPE 1
 #include <mt32emu.h>
 
+/* A text a person reads is a key of languages/en.json, each of its
+ * arguments after a TEXT_ARG (chimera docs/translations.md). TEXT_ARG is a
+ * string of its own so the byte after it is never read as more of its hex. */
+#define TEXT_ARG "\x1f"
+
 int files_put(const char *name, const uint8_t *data, long len);   /* files.c */
 
 /* ------------------------------------------------------------ the game's files */
@@ -456,14 +461,14 @@ static int mt32_open(char *err, int errsize)
 		 * as long as the machine */
 		if (n < 0 || mt32emu_add_rom_data(g_mt32, data, (size_t)n, NULL) < 0)
 		{
-			snprintf(err, (size_t)errsize, "the MT-32 did not take %s", roms[i]);
+			snprintf(err, (size_t)errsize, "error.mt32_rom" TEXT_ARG "%s", roms[i]);
 			return 0;
 		}
 	}
 	mt32emu_set_stereo_output_samplerate(g_mt32, SAM_AUDIO_RATE);
 	if (mt32emu_open_synth(g_mt32) != MT32EMU_RC_OK)
 	{
-		snprintf(err, (size_t)errsize, "the MT-32 could not start");
+		snprintf(err, (size_t)errsize, "error.mt32_start");
 		return 0;
 	}
 	return 1;
@@ -526,7 +531,7 @@ static int check_files(char *err, int errsize)
 		FILE *fp = fopen(k_files[i].name, "rb");
 		if (!fp)
 		{
-			snprintf(err, (size_t)errsize, "Sword of the Samurai needs %s - add it as the project's firmware.", k_files[i].name);
+			snprintf(err, (size_t)errsize, "error.needs_file" TEXT_ARG "%s", k_files[i].name);
 			return 0;
 		}
 		if (!strcmp(k_files[i].name, "ASOUND.SAM"))
@@ -537,16 +542,14 @@ static int check_files(char *err, int errsize)
 			if (!ok)
 			{
 				fclose(fp);
-				snprintf(err, (size_t)errsize, "%s could not be read.", k_files[i].name);
+				snprintf(err, (size_t)errsize, "error.unreadable" TEXT_ARG "%s", k_files[i].name);
 				return 0;
 			}
 			if (!strcmp(hex, FLOPPY_ASOUND_SHA1))
 			{
 				fclose(fp);
 				snprintf(err, (size_t)errsize,
-					"This ASOUND.SAM is the original floppy's AdLib driver, an older build than the one OpenSamurai's "
-					"AdLib is rebuilt from (the download's, %ld bytes, dated 1-10-94). Add that one, or choose "
-					"another sound.", k_files[i].size);
+					"error.old_asound" TEXT_ARG "%ld", k_files[i].size);
 				return 0;
 			}
 		}
@@ -580,7 +583,7 @@ static int load_saved_game(char *err, int errsize)
 	if (f) fclose(f);
 	if (n <= 0 || !files_put("TALLTALE.DAT", buf, n))
 	{
-		snprintf(err, (size_t)errsize, "the project's saved game %s could not be read", path);
+		snprintf(err, (size_t)errsize, "error.save_unreadable" TEXT_ARG "%s", path);
 		return 0;
 	}
 	return 1;
@@ -597,7 +600,7 @@ int samdrv_init(char *err, int errsize)
 	else if (!strcmp(text, "download")) g.release = REL_DOWNLOAD;
 	else
 	{
-		snprintf(err, (size_t)errsize, "the release setting is %s; it is floppy or download", text);
+		snprintf(err, (size_t)errsize, "error.bad_release" TEXT_ARG "%s", text);
 		return 0;
 	}
 
@@ -611,7 +614,7 @@ int samdrv_init(char *err, int errsize)
 	else if (!strcmp(text, "none")) g.sound = 0;
 	else
 	{
-		snprintf(err, (size_t)errsize, "the sound setting is %s; it is adlib, speaker, tandy, roland or none", text);
+		snprintf(err, (size_t)errsize, "error.bad_sound" TEXT_ARG "%s", text);
 		return 0;
 	}
 
@@ -629,7 +632,7 @@ int samdrv_init(char *err, int errsize)
 		while (end && *end == ' ') end++;
 		if (!*p || *p == '-' || errno || !end || *end)
 		{
-			snprintf(err, (size_t)errsize, "the random seed is \"%s\"; it is a number from 0 to 18446744073709551615, or 0x and hexadecimal digits", text);
+			snprintf(err, (size_t)errsize, "error.bad_seed" TEXT_ARG "%s", text);
 			return 0;
 		}
 	}
@@ -638,7 +641,7 @@ int samdrv_init(char *err, int errsize)
 	if (wbx_setting_str("clock_start", text, sizeof text) < 0) strcpy(text, "1989-10-25 12:00:00");
 	if (!parse_clock(text, &start))
 	{
-		snprintf(err, (size_t)errsize, "the start date and time is \"%s\"; it is written YYYY-MM-DD HH:MM:SS, from 1980", text);
+		snprintf(err, (size_t)errsize, "error.bad_start" TEXT_ARG "%s", text);
 		return 0;
 	}
 
@@ -668,7 +671,7 @@ int samdrv_init(char *err, int errsize)
 	g.co = coro_create(game_body, 8u << 20);
 	if (!g.co)
 	{
-		snprintf(err, (size_t)errsize, "no memory for the game's stack");
+		snprintf(err, (size_t)errsize, "error.no_stack");
 		return 0;
 	}
 	return 1;

@@ -3,13 +3,13 @@
   "slots": [
     {
       "id": "savedgame",
-      "title": "Saved game",
+      "title": "slot.savedgame",
       "min": 0,
       "max": 1,
       "formats": [
         "dat"
       ],
-      "help": "A TALLTALE.DAT file, the game's own saved game. The game writes one when Alt+S is pressed at the Home Option scroll, and 'Restore Saved Game' in the career choices loads it. The game keeps its own saves in the machine's memory and never changes this file."
+      "help": "slot.savedgame.help"
     }
   ]
 }

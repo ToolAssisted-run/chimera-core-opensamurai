@@ -12,13 +12,36 @@ import os
 import re
 import sys
 
+# ---- the texts a person reads ----------------------------------------------
+# Every one is a key of languages/en.json (chimera docs/translations.md):
+# text() records the key's English and returns the key, each of its
+# arguments after it behind a 0x1F; write_texts() puts them in the table,
+# beside the keys the core's code names.
+TEXTS = {}
+
+
+def text(key, english, *args):
+    if TEXTS.setdefault(key, english) != english:
+        sys.exit("%s has two texts: %r and %r" % (key, TEXTS[key], english))
+    return "\x1f".join([key] + [str(a) for a in args])
+
+
+def write_texts(path):
+    table = json.load(open(path, encoding="utf-8")) if os.path.exists(path) else {"texts": {}}
+    table["texts"].update(TEXTS)
+    table["texts"] = dict(sorted(table["texts"].items()))
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(table, f, indent="\t", ensure_ascii=False)
+        f.write("\n")
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
 def game_files():
     """(name, releases, need, size, sha1) as samurai-driver.c's k_files has them."""
-    text = open(os.path.join(HERE, "samurai-driver.c")).read()
-    return re.findall(r'\{ "([A-Z0-9_]+\.[A-Z]{3})", (REL_\w+), (NEED_\w+), (\d+), "([0-9A-F]{40})" \}', text)
+    source = open(os.path.join(HERE, "samurai-driver.c")).read()
+    return re.findall(r'\{ "([A-Z0-9_]+\.[A-Z]{3})", (REL_\w+), (NEED_\w+), (\d+), "([0-9A-F]{40})" \}', source)
 
 
 def rom(name):
@@ -27,8 +50,8 @@ def rom(name):
 
 def buttons():
     """The input.buttons names, in the driver's enum order (samurai-driver.h)."""
-    text = open(os.path.join(HERE, "samurai-driver.h")).read()
-    enum = text[text.index("enum SamButton"):text.index("SAM_BTN_COUNT")]
+    source = open(os.path.join(HERE, "samurai-driver.h")).read()
+    enum = source[source.index("enum SamButton"):source.index("SAM_BTN_COUNT")]
     enum = re.sub(r"/\*.*?\*/", "", enum, flags=re.S)
     syms = re.findall(r"SAM_BTN_(\w+)", enum)
     special = {"ESC": "Esc", "PLUS": "Keypad +", "MINUS": "Keypad -", "STAR": "Keypad *", "EQUALS": "Equals",
@@ -117,19 +140,23 @@ def main():
     firmware = []
     for name, rel, need, size, sha1 in game_files():
         rel_text, rel_values = RELEASE[rel]
+        # a text each, a line each (chimera docs/translations.md)
+        what = text("firmware.what." + re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_"), WHAT[name])
         if rom(name):
-            desc = ("%s is not one of the game's files. It is %s. You have to supply it when the sound device is the"
-                    " Roland, because this package includes none of it. Another MT-32 ROM that Munt knows can be used"
-                    " in its place, and the project then records its hash.") % (name, WHAT[name])
+            desc = text("firmware.mt32.about", "%1 is not one of the game's files. It is %2. You have to supply it when the "
+                        "sound device is the Roland, because this package includes none of it. Another MT-32 ROM that Munt "
+                        "knows can be used in its place, and the project then records its hash.", name, what)
         else:
-            desc = ("%s, a file of Sword of the Samurai 445.03 (MicroProse, 1989, DOS), from %s. It holds %s. You"
-                    " have to supply it, because this package includes none of the game's files. A modified file of"
-                    " your own can be used in its place, and the project then records its hash.") % (
-                name, rel_text, WHAT[name])
+            desc = text("firmware.data_file.about", "%1, a file of Sword of the Samurai 445.03 (MicroProse, 1989, DOS), from %2. "
+                        "It holds %3. You have to supply it, because this package includes none of the game's files. A "
+                        "modified file of your own can be used in its place, and the project then records its hash.", name,
+                        text("release." + rel.lower(), rel_text), what)
         if name == "START.EXE":
-            desc += " The floppy and the download have different builds of this file. The Release setting says which one the wizard looks for, and both play the same game."
+            desc += "\x1d" + text("firmware.start_exe", "The floppy and the download have different builds of this file. The "
+                                   "Release setting says which one the wizard looks for, and both play the same game.")
         if name == "ASOUND.SAM":
-            desc += " It must be the download's file (dated 1-10-94), whichever release is played. OpenSamurai's AdLib sound is built from it, and the floppy's older driver is refused."
+            desc += "\x1d" + text("firmware.asound_sam", "It must be the download's file (dated 1-10-94), whichever release is "
+                                   "played. OpenSamurai's AdLib sound is built from it, and the floppy's older driver is refused.")
         conds = []
         if rel != "REL_ANY":
             conds.append({"setting": "release", "in": rel_values})
@@ -137,8 +164,10 @@ def main():
             conds.append({"setting": "sound", "in": [SOUND[need]]})
         decl = {
             "id": name,
-            "display": ("Roland MT-32 %s ROM" % ("control" if "CONTROL" in name else "PCM")) if rom(name)
-            else "Sword of the Samurai %s%s" % (name, " (%s)" % rel_values[0] if rel != "REL_ANY" else ""),
+            "display": (text("firmware.mt32_control", "Roland MT-32 control ROM") if "CONTROL" in name else
+                        text("firmware.mt32_pcm", "Roland MT-32 PCM ROM")) if rom(name)
+            else text("firmware.data_file_release", "Sword of the Samurai %1 (%2)", name, rel_values[0]) if rel != "REL_ANY"
+            else text("firmware.data_file", "Sword of the Samurai %1", name),
             "description": desc,
             "size": int(size),
             "sha1": sha1,
@@ -186,24 +215,24 @@ def main():
         "settings": [
             {
                 "name": "release",
-                "display": "Release",
+                "display": text("setting.release", "Release"),
                 "type": "enum",
                 "options": ["floppy", "download"],
                 "default": "floppy",
-                "description": "Which release of Sword of the Samurai 445.03 the "
+                "description": text("setting.release.about", "Which release of Sword of the Samurai 445.03 the "
                     "project's files come from: the original floppy (the one"
                     " the published speedrun uses) or the download sold on "
                     "Steam and GOG.com. Both are the same game. Only "
                     "START.EXE (whose code OpenSamurai does not run) and the"
-                    " AdLib driver differ.",
+                    " AdLib driver differ."),
             },
             {
                 "name": "sound",
-                "display": "Sound",
+                "display": text("setting.sound", "Sound"),
                 "type": "enum",
                 "options": ["roland", "adlib", "speaker", "tandy", "none"],
                 "default": "roland",
-                "description": "The sound device the game is set up for: the Roland "
+                "description": text("setting.sound.about", "The sound device the game is set up for: the Roland "
                     "MT-32 (the default), the AdLib, the IBM PC speaker, the"
                     " Tandy, or none. The AdLib needs the download's "
                     "ASOUND.SAM, because OpenSamurai's AdLib sound is built "
@@ -212,23 +241,23 @@ def main():
                     "1.07, the first generation, which the game was made "
                     "for). The project supplies them as firmware. With the "
                     "PC speaker the title sequence runs slower, as it did "
-                    "originally.",
+                    "originally."),
             },
             {
                 "name": "skip_title",
-                "display": "Skip the Title",
+                "display": text("setting.skip_title", "Skip the Title"),
                 "type": "bool",
                 "default": False,
-                "description": "Starts the game with its /NT option. The title sequence"
+                "description": text("setting.skip_title.about", "Starts the game with its /NT option. The title sequence"
                     " is left out and the game starts at the copy-protection"
-                    " question.",
+                    " question."),
             },
             {
                 "name": "random_seed",
-                "display": "Random Seed",
+                "display": text("setting.random_seed", "Random Seed"),
                 "type": "string",
                 "default": "0",
-                "description": "The starting number for all of the game's random "
+                "description": text("setting.random_seed.about", "The starting number for all of the game's random "
                     "numbers: the crest question, the characters, the "
                     "encounters, and the opponents in duels, melees and "
                     "battles. The DOS programs took their random numbers "
@@ -237,19 +266,19 @@ def main():
                     " in hexadecimal after 0x, in the same form "
                     "OpenSamurai's own program takes it (OPENSAMURAI_SEED). "
                     "A number that program printed gives the same random "
-                    "numbers here. A movie records the number it ran with.",
+                    "numbers here. A movie records the number it ran with."),
             },
             {
                 "name": "clock_start",
-                "display": "Start Date and Time",
+                "display": text("setting.clock_start", "Start Date and Time"),
                 "type": "string",
                 "default": "1989-10-25 12:00:00",
-                "description": "The PC's date and time when the game starts, written as"
+                "description": text("setting.clock_start.about", "The PC's date and time when the game starts, written as"
                     " YYYY-MM-DD HH:MM:SS. The clock then advances with the "
                     "frames. The game reads it as the time, for example for "
                     "how long a prompt waits and when an encounter on the "
                     "road can happen. A movie records the start time it ran "
-                    "with.",
+                    "with."),
             },
         ],
         "firmware": firmware,
@@ -257,6 +286,7 @@ def main():
     with open(out, "w") as f:
         json.dump(cfg, f, indent=2)
         f.write("\n")
+    write_texts(os.path.join(os.path.dirname(os.path.abspath(out)), "languages", "en.json"))
 
 
 if __name__ == "__main__":

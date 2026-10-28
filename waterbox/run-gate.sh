@@ -151,7 +151,7 @@ workdir() {
 # ------------------------------------------------------------------ 3. no files
 wd="$work/nofiles"; mkdir -p "$wd"; printf '{}' > "$wd/settings"
 boxed "$wd" --frames 1 > "$work/nofiles.txt" 2>/dev/null
-if grep -qx 'loadError=Sword of the Samurai needs MISC.EXE - add it as the project.s firmware.' "$work/nofiles.txt"; then
+if grep -qx 'loadError=error.needs_file.MISC.EXE' "$work/nofiles.txt"; then
 	report "refuse:no-files" PASS "$(sed -n 's/^loadError=//p' "$work/nofiles.txt")"
 else
 	report "refuse:no-files" FAIL "$(head -1 "$work/nofiles.txt")"
@@ -167,7 +167,7 @@ fi
 wd="$(workdir refuse-missing '{}')"; rm "$wd/RP.CAT"
 boxed "$wd" --frames 1 > "$work/r1.txt" 2>/dev/null
 native "$wd" --frames 1 > "$work/r1n.txt" 2>/dev/null
-if grep -qx 'loadError=Sword of the Samurai needs RP.CAT - add it as the project.s firmware.' "$work/r1.txt" && cmp -s <(grep loadError "$work/r1.txt") <(grep loadError "$work/r1n.txt"); then
+if grep -qx 'loadError=error.needs_file.RP.CAT' "$work/r1.txt" && cmp -s <(grep loadError "$work/r1.txt") <(grep loadError "$work/r1n.txt"); then
 	report "refuse:missing-file" PASS "$(sed -n 's/^loadError=//p' "$work/r1.txt")"
 else
 	report "refuse:missing-file" FAIL "$(grep -m1 . "$work/r1.txt")"
@@ -191,7 +191,7 @@ fi
 if [ -f "$data/floppy/ASOUND.SAM" ]; then
 	wd="$(workdir refuse-floppy-adlib '{}')"; cp "$data/floppy/ASOUND.SAM" "$wd/ASOUND.SAM"
 	boxed "$wd" --frames 1 > "$work/r3.txt" 2>/dev/null
-	if grep -q "^loadError=This ASOUND.SAM is the original floppy's AdLib driver, an older build" "$work/r3.txt"; then
+	if grep -q "^loadError=error.old_asound" "$work/r3.txt"; then
 		report "refuse:floppy-adlib" PASS "the floppy's older AdLib driver refused by name"
 	else
 		report "refuse:floppy-adlib" FAIL "$(grep -m1 . "$work/r3.txt")"
@@ -364,7 +364,7 @@ dflt="$(boxed "$wd" --frames 1950 2>/dev/null | sed -n 's/^audioHash=//p')"
 rm "$wd/MT32_PCM.ROM"
 boxed "$wd" --frames 1 > "$work/sound-default.txt" 2>/dev/null
 if [ -n "$dflt" ] && [ "$dflt" = "$(sed -n 's/^audioHash=//p' "$work/roland.box.txt")" ] && [ "$dflt" != "$(a adlib)" ] &&
-   grep -qx "loadError=Sword of the Samurai needs MT32_PCM.ROM - add it as the project's firmware." "$work/sound-default.txt"; then
+   grep -qx "loadError=error.needs_file.MT32_PCM.ROM" "$work/sound-default.txt"; then
 	report "settings:sound-default" PASS "no sound setting: the Roland's sound (the roland run's, 1950 steps), and the MT-32's ROMs asked for"
 else
 	report "settings:sound-default" FAIL "default $dflt, roland $(sed -n 's/^audioHash=//p' "$work/roland.box.txt"), adlib $(a adlib); $(grep -m1 . "$work/sound-default.txt")"
@@ -401,7 +401,7 @@ seedrun() { local wd; wd="$(workdir "seed-$1" "{\"random_seed\":\"$2\"}")"; boxe
 s_dec="$(seedrun dec 1234)"; s_hex="$(seedrun hex 0x4D2)"; s_max="$(seedrun max 18446744073709551615)"; s_bad="$(seedrun bad 12ab)"
 s_32="$(seedrun low32 4294967295)"
 if [ "$s_dec" = "$s_hex" ] && [ -n "$s_max" ] && [ "$s_max" != "$s_dec" ] && [ "$s_max" != "$s_32" ] && [ "${s_max#videoHash=}" != "$s_max" ] &&
-   [ "$s_bad" = 'loadError=the random seed is "12ab"; it is a number from 0 to 18446744073709551615, or 0x and hexadecimal digits' ]; then
+   [ "$s_bad" = "loadError=error.bad_seed$(printf '\037')12ab" ]; then
 	report "settings:seed-64-bit" PASS "1234 == 0x4D2; 18446744073709551615 another game, not 4294967295's (all 64 bits count); \"12ab\" refused"
 else
 	report "settings:seed-64-bit" FAIL "dec [$s_dec] hex [$s_hex] max [$s_max] bad [$s_bad]"
