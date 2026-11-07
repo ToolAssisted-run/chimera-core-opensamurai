@@ -184,7 +184,7 @@ def main():
         "systemNames": SYSTEM_NAMES,
         "author": "Sergio Martin, from MicroProse's Sword of the Samurai (1989); chimera port by Sergio Martin",
         "url": "https://github.com/ToolAssisted-run/chimera-core-opensamurai",
-        "runsOn": ["windows-x86_64", "linux-x86_64", "macos-x86_64"],
+        "runsOn": ["windows-x86_64", "linux-x86_64", "macos-x86_64", "windows-aarch64", "linux-aarch64", "macos-aarch64"],
         "deterministic": True,
         "memoryLayoutMiB": [32, 8, 8, 8, 32],
         "_memoryLayoutMiB_note": "sbrk, sealed, invisible, plain, mmap. The DOS machine's megabyte and the programs' files are allocated on the heap; the game's stack (8 MB) is mmap'd (MAP_STACK).",
